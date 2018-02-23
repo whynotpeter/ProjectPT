@@ -1,0 +1,9 @@
+Form1.cs
+connection = new SqlConnection(connetionString);
+pokazuje b³¹d - zakomentowane
+
+trzeba dodac certyfikat po skopiowaniu na inn¹ maszyne
+project -> properties -> signing - > create test certificate
+
+aby odczytac ATR do jakiegos stringa nalezy u¿yc np 
+string a = _ParentForm.czytajAtr();
