@@ -8,7 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.SqlClient;
-using System.Collections;
+
+
+
+
 
 namespace PT_main
 {
@@ -36,9 +39,14 @@ namespace PT_main
 
         private login _ParentForm;
 
+
+
         public Form3(string username, login parentForm)
         {
             InitializeComponent();
+
+            _ParentForm = parentForm;
+           // label2.Text = _ParentForm.czytajAtr();
 
             dataGridView1.ReadOnly = true;
             dataGridView2.ReadOnly = true;
@@ -50,6 +58,7 @@ namespace PT_main
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
             label1.Text = "SZCEGÓŁY OBECNOŚCI";
+            label1.Text = _ParentForm.czytajAtr();
 
             String student = null;
             sconnetionString = "Data Source=WHYNOT-KOMPUTER\\SQLEXPRESS;Initial Catalog=PTproject;Integrated Security=True";
@@ -119,7 +128,34 @@ namespace PT_main
                 MessageBox.Show(ex.ToString());
             }
         }
-      
+
+        private string _atr;
+
+        //#1
+        public event System.EventHandler AgeChanged;
+
+        //#2
+        protected virtual void OnAgeChanged()
+        {
+            if (AgeChanged != null) AgeChanged(this, EventArgs.Empty);
+            MessageBox.Show(this.ToString());
+        }
+
+        public string Atr
+        {
+            get
+            {
+                return _atr;
+            }
+
+            set
+            {
+                //#3
+                _atr = value;
+                OnAgeChanged();
+            }
+        }
+
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
  

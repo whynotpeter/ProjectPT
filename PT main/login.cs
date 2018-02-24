@@ -10,11 +10,13 @@ using System.Windows.Forms;
 using Utilities;
 using Subsembly.SmartCard;
 using Subsembly.SmartCard.PcSc;
+using System.Data.SqlClient;
 
 namespace PT_main
 {
     public partial class login : Form
     {
+        
         string user1 = "admin";
         string user2 = "100357";
         string user3 = "122022";
@@ -37,9 +39,15 @@ namespace PT_main
         //private About about;
         private Array terminaleTab;
 
+       
+        public event EventHandler updateEvent;
+
         public login()
         {
             InitializeComponent();
+            connectReader();
+
+            label1.Text = "Zgłoś obecność";
         }
 
         private void login_Load(object sender, EventArgs e)
@@ -350,16 +358,110 @@ namespace PT_main
         public string czytajAtr()
         {
             string atr;
-            connectReader();
+            //connectReader();
             atr = connectCard();
             disconnectCard();
-            disconnectReader();
+           // disconnectReader();
             return atr;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
             //label1.Text = czytajAtr();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            string atr = czytajAtr();
+            // MessageBox.Show(atr);
+
+            string connetionString = null;
+            string sql = null;
+            SqlCommand sCommand;
+            SqlDataAdapter sAdapter;
+            SqlCommandBuilder sBuilder;
+            DataSet ds;
+            //DataTable sTable;
+            //sTable = null;
+            //string connetionString;
+            SqlConnection connection;
+
+            connetionString = "Data Source=WHYNOT-KOMPUTER\\SQLEXPRESS;Initial Catalog=PTproject;Integrated Security=True";
+            connection = new SqlConnection(connetionString);
+
+
+            sql = "select ls.id, s.imie+\' \'+s.nazwisko as student, ls.obecny, atr as ATR from lista_obecnosci ls"
+                    + " join studenci as s on s.id=ls.student_id "
+                    + " join plan_zajec as pz on pz.id=ls.plan_id "
+                    + " join przedmioty as p on pz.przedmiot_id=p.id "
+                    + " where ls.student_id = "
+                    + " (select s.id from studenci as s"
+                    + " join zapisani_na_kierunek as zap on zap.student_id = s.id"
+                    + " join kierunki as k on k.id = zap.kierunek_id "
+                    + " join wydzialy as w on w.id = k.wydzial_id "
+                    + " where dzien = CAST(GETDATE() AS date) "
+                    + " and s.atr ='" + atr + "')";
+
+            try { 
+                //Pierwsza czesc wyciaga ID studenta
+            connection.Open();
+            sCommand = new SqlCommand(sql, connection);
+            sAdapter = new SqlDataAdapter(sCommand);
+            sBuilder = new SqlCommandBuilder(sAdapter);
+            ds = new DataSet();
+            sAdapter.Fill(ds, "Studenci");
+            //sTable = sDs.Tables["Moje Przedmioty"];
+            connection.Close();
+            dataGridView1.DataSource = ds.Tables["Studenci"];
+         
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+
+            string StrQuery;
+            try
+            {
+                //string MyConnection2 = "server=localhost;user id=root;password=;database=k";
+                using (connection = new SqlConnection(connetionString))
+                {
+                    using (SqlCommand command = new SqlCommand())
+                    {
+                        command.Connection = connection;
+                        connection.Open();
+                        StrQuery = @"update lista_obecnosci set obecny= 1 where id =" +dataGridView1.Rows[0].Cells["id"].Value.ToString();
+                        command.CommandText = StrQuery;
+                        command.ExecuteNonQuery();
+                        MessageBox.Show("Obecnosc odnotowana");
+                        
+                    }
+                }
+
+
+            }
+            catch 
+            {
+                MessageBox.Show("Obecnosc musi zostać odnotowana ręcznie przez prowadzącego");
+            }
+
+
+        }
+
+        private void login_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            disconnectReader();
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
         }
     }
 }
